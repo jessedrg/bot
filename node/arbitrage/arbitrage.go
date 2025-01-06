@@ -1,23 +1,28 @@
+/* cSpell:disable */
 package arbitrage
 
 import (
-	"github.com/adshao/go-binance/v2" // Example import for Binance client
+	"github.com/adshao/go-binance/v2"
+	algod "github.com/algorand/go-algorand-sdk/v2/client/v2/algod"
 	// Other necessary imports
 )
 
 type ArbitrageBot struct {
     binanceClient *binance.Client
-    algorandClient *AlgorandClient // Assume you have an Algorand client struct
+    algorandClient *algod.Client
     tradingPair    string
     liquidityPools map[string]*LiquidityPool
-    tradeHistory    TradeHistory
+   
 }
 
-func NewArbitrageBot(apiKey, secretKey, tradingPair string) *ArbitrageBot {
-    client := binance.NewClient(apiKey, secretKey)
+func NewArbitrageBot(apiKey, secretKey, algodAddress, algodToken, tradingPair string) *ArbitrageBot {
+    binanceClient := binance.NewClient(apiKey, secretKey)
+    algorandClient, _ := algod.MakeClient(algodAddress, algodToken)
+    
     return &ArbitrageBot{
-        binanceClient: client,
-        tradingPair:   tradingPair,
-        liquidityPools: make(map[string]*LiquidityPool),
+        binanceClient:   binanceClient,
+        algorandClient:  algorandClient,
+        tradingPair:     tradingPair,
+        liquidityPools:  make(map[string]*LiquidityPool),
     }
 }

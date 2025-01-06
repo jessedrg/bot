@@ -61,6 +61,7 @@ require (
 
 require (
 	github.com/adshao/go-binance/v2 v2.7.1 // indirect
+	github.com/algorand/go-algorand-sdk v1.24.0
 	github.com/algorand/go-algorand-sdk/v2 v2.3.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect

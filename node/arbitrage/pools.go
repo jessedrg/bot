@@ -1,4 +1,4 @@
-// cSpell:words algorand
+/* cSpell:disable */
 
 package arbitrage
 
@@ -7,8 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/algorand/go-algorand-sdk/v2/types"
-	"github.com/algorand/go-algorand/data/transactions"
+	v2 "github.com/algorand/go-algorand-sdk/v2/types"
 )
 
 // LiquidityPool contiene los detalles de un pool de liquidez.
@@ -43,7 +42,7 @@ func (bot *ArbitrageBot) FindLiquidityPools() ([]LiquidityPool, error) {
             return nil, fmt.Errorf("error obteniendo bloque %d: %w", round, err)
         }
 
-        for _, txn := range block.Transactions {
+        for _, txn := range block.Payset {
             if pool, ok := bot.processPoolTransaction(txn); ok {
                 pools = append(pools, pool)
             }
@@ -54,8 +53,8 @@ func (bot *ArbitrageBot) FindLiquidityPools() ([]LiquidityPool, error) {
 }
 
 // processPoolTransaction procesa transacciones relacionadas con pools de liquidez.
-func (bot *ArbitrageBot) processPoolTransaction(txn transactions.SignedTxnInBlock) (LiquidityPool, bool) {
-    if txn.Txn.Type != types.ApplicationCallTx {
+func (bot *ArbitrageBot) processPoolTransaction(txn v2.SignedTxnInBlock) (LiquidityPool, bool) {
+    if txn.Txn.Type != v2.ApplicationCallTx {
         return LiquidityPool{}, false
     }
 
@@ -66,8 +65,8 @@ func (bot *ArbitrageBot) processPoolTransaction(txn transactions.SignedTxnInBloc
     pool := LiquidityPool{
         AssetA:    uint64(txn.Txn.XferAsset),    
         AssetB:    uint64(txn.Txn.ApplicationID),
-        PoolSizeA: txn.Txn.Amount.Raw,
-        PoolSizeB: txn.Txn.Amount.Raw,
+        PoolSizeA: uint64(txn.Txn.Amount),
+        PoolSizeB: uint64(txn.Txn.Amount),
         Address:   txn.Txn.Sender.String(),
         Timestamp: time.Now().Unix(),
     }

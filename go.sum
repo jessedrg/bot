@@ -24,6 +24,8 @@ github.com/algorand/avm-abi v0.2.0 h1:bkjsG+BOEcxUcnGSALLosmltE0JZdg+ZisXKx0UDX2
 github.com/algorand/avm-abi v0.2.0/go.mod h1:+CgwM46dithy850bpTeHh9MC99zpn2Snirb3QTl2O/g=
 github.com/algorand/falcon v0.1.0 h1:xl832kfZ7hHG6B4p90DQynjfKFGbIUgUOnsRiMZXfAo=
 github.com/algorand/falcon v0.1.0/go.mod h1:OkQyHlGvS0kLNcIWbC21/uQcnbfwSOQm+wiqWwBG9pQ=
+github.com/algorand/go-algorand-sdk v1.24.0 h1:mi8vqjXMC5nU87snq4vxHi+NgPR0thtZHRLA16FKZMM=
+github.com/algorand/go-algorand-sdk v1.24.0/go.mod h1:WEeJcctOHMzDFTgVJ6GT8BLUo9DbFTT47S+Kzx7ffXQ=
 github.com/algorand/go-algorand-sdk/v2 v2.3.0 h1:WkdZ3EleBZ+DO0KbNvdmmJLv892ghbtQI0A/H165emw=
 github.com/algorand/go-algorand-sdk/v2 v2.3.0/go.mod h1:Xk569fTpBTV0QtE74+79NTl6Rz3OC1K3iods4uG0ffU=
 github.com/algorand/go-algorand-sdk/v2 v2.7.0 h1:ntORjVgXnm+1jqpj55Fv2MbYitxwE9A+xNYopsN5uoA=
