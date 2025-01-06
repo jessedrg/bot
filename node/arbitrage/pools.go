@@ -1,3 +1,5 @@
+// cSpell:words algorand
+
 package arbitrage
 
 import (
@@ -5,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/algorand/go-algorand-sdk/v2/types"
 	"github.com/algorand/go-algorand/data/transactions"
 )
 
@@ -52,7 +55,7 @@ func (bot *ArbitrageBot) FindLiquidityPools() ([]LiquidityPool, error) {
 
 // processPoolTransaction procesa transacciones relacionadas con pools de liquidez.
 func (bot *ArbitrageBot) processPoolTransaction(txn transactions.SignedTxnInBlock) (LiquidityPool, bool) {
-    if txn.Txn.Type != transactions.ApplicationCallTx {
+    if txn.Txn.Type != types.ApplicationCallTx {
         return LiquidityPool{}, false
     }
 
@@ -61,10 +64,10 @@ func (bot *ArbitrageBot) processPoolTransaction(txn transactions.SignedTxnInBloc
     }
 
     pool := LiquidityPool{
-        AssetA:    txn.Txn.XferAsset,    
-        AssetB:    txn.Txn.ApplicationID,
-        PoolSizeA: txn.Txn.Amount,        
-        PoolSizeB: txn.Txn.Amount,        
+        AssetA:    uint64(txn.Txn.XferAsset),    
+        AssetB:    uint64(txn.Txn.ApplicationID),
+        PoolSizeA: txn.Txn.Amount.Raw,
+        PoolSizeB: txn.Txn.Amount.Raw,
         Address:   txn.Txn.Sender.String(),
         Timestamp: time.Now().Unix(),
     }

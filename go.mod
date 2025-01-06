@@ -26,7 +26,7 @@ require (
 	github.com/gofrs/flock v0.7.0
 	github.com/golang/snappy v0.0.4
 	github.com/google/go-cmp v0.6.0
-	github.com/google/go-querystring v1.0.0
+	github.com/google/go-querystring v1.1.0
 	github.com/gorilla/mux v1.8.1
 	github.com/ipfs/go-log v1.0.5
 	github.com/ipfs/go-log/v2 v2.5.1
@@ -61,6 +61,7 @@ require (
 
 require (
 	github.com/adshao/go-binance/v2 v2.7.1 // indirect
+	github.com/algorand/go-algorand-sdk/v2 v2.3.0 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect

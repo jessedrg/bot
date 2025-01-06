@@ -24,6 +24,10 @@ github.com/algorand/avm-abi v0.2.0 h1:bkjsG+BOEcxUcnGSALLosmltE0JZdg+ZisXKx0UDX2
 github.com/algorand/avm-abi v0.2.0/go.mod h1:+CgwM46dithy850bpTeHh9MC99zpn2Snirb3QTl2O/g=
 github.com/algorand/falcon v0.1.0 h1:xl832kfZ7hHG6B4p90DQynjfKFGbIUgUOnsRiMZXfAo=
 github.com/algorand/falcon v0.1.0/go.mod h1:OkQyHlGvS0kLNcIWbC21/uQcnbfwSOQm+wiqWwBG9pQ=
+github.com/algorand/go-algorand-sdk/v2 v2.3.0 h1:WkdZ3EleBZ+DO0KbNvdmmJLv892ghbtQI0A/H165emw=
+github.com/algorand/go-algorand-sdk/v2 v2.3.0/go.mod h1:Xk569fTpBTV0QtE74+79NTl6Rz3OC1K3iods4uG0ffU=
+github.com/algorand/go-algorand-sdk/v2 v2.7.0 h1:ntORjVgXnm+1jqpj55Fv2MbYitxwE9A+xNYopsN5uoA=
+github.com/algorand/go-algorand-sdk/v2 v2.7.0/go.mod h1:BkHnK2PuCqzdGPNeWUo5yo6lRjyDZ9QoMN8GIjfijrA=
 github.com/algorand/go-codec/codec v1.1.10 h1:zmWYU1cp64jQVTOG8Tw8wa+k0VfwgXIPbnDfiVa+5QA=
 github.com/algorand/go-codec/codec v1.1.10/go.mod h1:YkEx5nmr/zuCeaDYOIhlDg92Lxju8tj2d2NrYqP7g7k=
 github.com/algorand/go-deadlock v0.2.4 h1:UMs6GwE2wHC6BUZo5z32/+SrBey1LQjbkZQ3V7DoGVA=
@@ -230,6 +234,8 @@ github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeN
 github.com/google/go-github v17.0.0+incompatible/go.mod h1:zLgOLi98H3fifZn+44m+umXrS52loVEgC2AApnigrVQ=
 github.com/google/go-querystring v1.0.0 h1:Xkwi/a1rcvNg1PPYe5vI8GbeBY/jrVuDX5ASuANWTrk=
 github.com/google/go-querystring v1.0.0/go.mod h1:odCYkC5MyYFN7vkCjXpyrEuKhc/BUO6wN/zVPAxq5ck=
+github.com/google/go-querystring v1.1.0 h1:AnCroh3fv4ZBgVIf1Iwtovgjaw/GiKJo8M8yD/fhyJ8=
+github.com/google/go-querystring v1.1.0/go.mod h1:Kcdr2DB4koayq7X8pmAG4sNG59So17icRSOU623lUBU=
 github.com/google/gopacket v1.1.19 h1:ves8RnFZPGiFnTS0uPQStjwru6uO6h+nlr9j6fL7kF8=
 github.com/google/gopacket v1.1.19/go.mod h1:iJ8V8n6KS+z2U1A8pUwu8bW5SyEMkXJB8Yo/Vo+TKTo=
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
