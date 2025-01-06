@@ -1,48 +1,67 @@
-/* cSpell:disable */
-
 package arbitrage
 
 import (
-	"context"
 	"fmt"
 	"time"
 
-	v2 "github.com/algorand/go-algorand-sdk/v2/types"
+	"github.com/algorand/go-algorand/data"
+	"github.com/algorand/go-algorand/data/basics"
+	"github.com/algorand/go-algorand/data/pools"
+	"github.com/algorand/go-algorand/data/transactions"
+	"github.com/algorand/go-algorand/protocol"
 )
 
 // LiquidityPool contiene los detalles de un pool de liquidez.
 type LiquidityPool struct {
-    AssetA    uint64  // ID del primer activo
-    AssetB    uint64  // ID del segundo activo
-    PoolSizeA uint64  // Tamaño del pool de AssetA
-    PoolSizeB uint64  // Tamaño del pool de AssetB
-    Address   string  // Dirección del contrato del pool
-    Timestamp int64   // Timestamp de la última actualización
-    Price     float64 // Precio de AssetA en términos de AssetB
+    AssetA    basics.AssetIndex
+    AssetB    basics.AssetIndex
+    PoolSizeA uint64
+    PoolSizeB uint64
+    Address   basics.Address
+    Timestamp int64
+    Price     float64
+}
+
+// Bot estructura principal del bot de arbitraje
+type Bot struct {
+    ledger          *data.Ledger
+    transactionPool *pools.TransactionPool
+    tradingPair     string
+    liquidityPools  map[string]*LiquidityPool
+    address         basics.Address
+}
+
+// NewBot crea una nueva instancia del Bot
+func NewBot(ledger *data.Ledger, transactionPool *pools.TransactionPool, tradingPair string, address basics.Address) *Bot {
+    return &Bot{
+        ledger:          ledger,
+        transactionPool: transactionPool,
+        tradingPair:     tradingPair,
+        liquidityPools:  make(map[string]*LiquidityPool),
+        address:         address,
+    }
 }
 
 // FindLiquidityPools busca los liquidity pools en los últimos bloques.
-func (bot *ArbitrageBot) FindLiquidityPools() ([]LiquidityPool, error) {
+func (bot *Bot) FindLiquidityPools() ([]LiquidityPool, error) {
     var pools []LiquidityPool
-    
-    status, err := bot.algorandClient.Status().Do(context.Background())
-    if err != nil {
-        return nil, fmt.Errorf("error obteniendo estado: %w", err)
-    }
-    
-    latestRound := status.LastRound
-    startRound := uint64(0)
+
+    // Obtener el último bloque del ledger
+    latestRound := bot.ledger.Latest()
+    startRound := basics.Round(0)
     if latestRound > 1000 {
         startRound = latestRound - 1000
     }
 
+    // Recorrer los bloques
     for round := latestRound; round >= startRound; round-- {
-        block, err := bot.algorandClient.Block(round).Do(context.Background())
+        blk, err := bot.ledger.Block(round)
         if err != nil {
             return nil, fmt.Errorf("error obteniendo bloque %d: %w", round, err)
         }
 
-        for _, txn := range block.Payset {
+        // Procesar las transacciones del bloque
+        for _, txn := range blk.Payset {
             if pool, ok := bot.processPoolTransaction(txn); ok {
                 pools = append(pools, pool)
             }
@@ -53,21 +72,23 @@ func (bot *ArbitrageBot) FindLiquidityPools() ([]LiquidityPool, error) {
 }
 
 // processPoolTransaction procesa transacciones relacionadas con pools de liquidez.
-func (bot *ArbitrageBot) processPoolTransaction(txn v2.SignedTxnInBlock) (LiquidityPool, bool) {
-    if txn.Txn.Type != v2.ApplicationCallTx {
+func (bot *Bot) processPoolTransaction(txn transactions.SignedTxnInBlock) (LiquidityPool, bool) {
+    // Verificar si es una transacción de aplicación
+    if txn.Txn.Type != protocol.ApplicationCallTx {
         return LiquidityPool{}, false
     }
 
+    // Verificar que es una llamada válida a un contrato de liquidez
     if txn.Txn.ApplicationID == 0 {
         return LiquidityPool{}, false
     }
 
     pool := LiquidityPool{
-        AssetA:    uint64(txn.Txn.XferAsset),    
-        AssetB:    uint64(txn.Txn.ApplicationID),
-        PoolSizeA: uint64(txn.Txn.Amount),
-        PoolSizeB: uint64(txn.Txn.Amount),
-        Address:   txn.Txn.Sender.String(),
+        AssetA:    txn.Txn.XferAsset,
+        AssetB:    basics.AssetIndex(txn.Txn.ApplicationID),
+        PoolSizeA: txn.Txn.AssetAmount,
+        PoolSizeB: txn.Txn.Amount.Raw,
+        Address:   txn.Txn.Sender,
         Timestamp: time.Now().Unix(),
     }
 
@@ -84,17 +105,16 @@ func calculatePoolPrice(poolSizeA, poolSizeB uint64) float64 {
     return float64(poolSizeA) / float64(poolSizeB)
 }
 
-// FindArbitrageOpportunity identifica oportunidades de arbitraje entre dos pools.
-func (bot *ArbitrageBot) FindArbitrageOpportunity(pools []LiquidityPool) (*LiquidityPool, *LiquidityPool, float64) {
+// FindArbitrageOpportunity identifica oportunidades de arbitraje entre pools
+func (bot *Bot) FindArbitrageOpportunity(pools []LiquidityPool) (*LiquidityPool, *LiquidityPool, float64) {
     var bestBuyPool *LiquidityPool
     var bestSellPool *LiquidityPool
     maxProfit := 0.0
 
-    // Compara todos los pools entre sí
     for _, buyPool := range pools {
         for _, sellPool := range pools {
             if buyPool.Address == sellPool.Address {
-                continue // No puedes hacer arbitraje en el mismo pool
+                continue
             }
 
             profit := calculateArbitrageProfit(buyPool, sellPool)
@@ -109,57 +129,78 @@ func (bot *ArbitrageBot) FindArbitrageOpportunity(pools []LiquidityPool) (*Liqui
     return bestBuyPool, bestSellPool, maxProfit
 }
 
-// calculateArbitrageProfit calcula la ganancia potencial de arbitraje entre dos pools.
+// calculateArbitrageProfit calcula la ganancia potencial
 func calculateArbitrageProfit(buyPool, sellPool LiquidityPool) float64 {
-    // Supón que compras en buyPool y vendes en sellPool
     buyPrice := buyPool.Price
     sellPrice := sellPool.Price
 
-    // Si el precio de compra es más bajo y el de venta es más alto, hay una oportunidad de arbitraje
     if buyPrice < sellPrice {
         return sellPrice - buyPrice
     }
     return 0.0
 }
 
-// ExecuteArbitrage ejecuta la transacción de arbitraje si se encuentra una oportunidad.
-func (bot *ArbitrageBot) ExecuteArbitrage(buyPool, sellPool *LiquidityPool) error {
-    // Aquí implementas la lógica para realizar las transacciones de arbitraje
-    // Entre buyPool y sellPool
-
-    // Ejemplo:
-    if buyPool != nil && sellPool != nil {
-        // Realiza la compra en el buyPool
-        err := bot.executeTransaction(buyPool, true)
-        if err != nil {
-            return fmt.Errorf("error ejecutando compra: %w", err)
-        }
-
-        // Realiza la venta en el sellPool
-        err = bot.executeTransaction(sellPool, false)
-        if err != nil {
-            return fmt.Errorf("error ejecutando venta: %w", err)
-        }
-
-        fmt.Printf("Arbitraje ejecutado con éxito entre los pools: %s y %s\n", buyPool.Address, sellPool.Address)
-        return nil
+// ExecuteArbitrage ejecuta la transacción de arbitraje
+// ExecuteArbitrage ejecuta la transacción de arbitraje
+// ExecuteArbitrage ejecuta la transacción de arbitraje
+func (bot *Bot) ExecuteArbitrage(buyPool, sellPool *LiquidityPool) error {
+    if buyPool == nil || sellPool == nil {
+        return fmt.Errorf("pools inválidos para arbitraje")
     }
 
-    return fmt.Errorf("no se encontró oportunidad de arbitraje")
-}
-
-// executeTransaction realiza la transacción de compra o venta en un pool de liquidez.
-func (bot *ArbitrageBot) executeTransaction(pool *LiquidityPool, isBuy bool) error {
-    // Implementa la lógica para interactuar con el contrato y ejecutar la transacción
-    // "isBuy" indica si es una compra (true) o una venta (false)
-    // Aquí tendrías que crear una transacción en Algorand para interactuar con el contrato.
-
-    if isBuy {
-        fmt.Printf("Comprando en el pool: %s\n", pool.Address)
-    } else {
-        fmt.Printf("Vendiendo en el pool: %s\n", pool.Address)
+    // Obtener la información de genesis del primer bloque
+    genesisBlock, err := bot.ledger.Block(basics.Round(0))
+    if err != nil {
+        return fmt.Errorf("error obteniendo bloque genesis: %w", err)
     }
 
-    // Simula la ejecución de la transacción (esto debería ser reemplazado por interacción real con la blockchain)
+    // Crear transacción de compra
+    buyTxn := transactions.Transaction{
+        Type: protocol.ApplicationCallTx,
+        Header: transactions.Header{
+            Sender:      bot.address,
+            FirstValid:  bot.ledger.Latest(),
+            LastValid:   bot.ledger.Latest() + 1000,
+            Fee:        basics.MicroAlgos{Raw: 1000},
+            GenesisID:  genesisBlock.GenesisID(),
+            GenesisHash: genesisBlock.GenesisHash(),
+        },
+        ApplicationCallTxnFields: transactions.ApplicationCallTxnFields{
+            ApplicationID: basics.AppIndex(buyPool.AssetB),
+            OnCompletion: transactions.NoOpOC,
+            ApplicationArgs: [][]byte{},
+        },
+    }
+
+    // Crear transacción de venta
+    sellTxn := transactions.Transaction{
+        Type: protocol.ApplicationCallTx,
+        Header: transactions.Header{
+            Sender:      bot.address,
+            FirstValid:  bot.ledger.Latest(),
+            LastValid:   bot.ledger.Latest() + 1000,
+            Fee:        basics.MicroAlgos{Raw: 1000},
+            GenesisID:  genesisBlock.GenesisID(),
+            GenesisHash: genesisBlock.GenesisHash(),
+        },
+        ApplicationCallTxnFields: transactions.ApplicationCallTxnFields{
+            ApplicationID: basics.AppIndex(sellPool.AssetB),
+            OnCompletion: transactions.NoOpOC,
+            ApplicationArgs: [][]byte{},
+        },
+    }
+
+    // Crear grupo de transacciones
+    txGroup := []transactions.SignedTxn{
+        {Txn: buyTxn},
+        {Txn: sellTxn},
+    }
+
+    // Agregar transacciones al pool
+    err = bot.transactionPool.Remember(txGroup)
+    if err != nil {
+        return fmt.Errorf("error al agregar transacciones al pool: %w", err)
+    }
+
     return nil
 }
